@@ -57,7 +57,7 @@ function save(db, doc) {
   doc.$createdAt = (new Date()).toJSON();
   if (doc.$id) { // update?
     // this format guarantees the docs will be retrieved in order they were created
-    doc._id = doc.$id + '_' + doc.$createdAt;
+    doc._id = doc.$id + '.' + doc.$createdAt;
 
     return db.put(doc).then(function (response) {
       response.$id = doc.$id;
@@ -91,11 +91,13 @@ exports.delete = function (docOrId) {
   return save(this, {$id: id, $deleted: true});
 };
 
-exports.all = function () {
+exports.all = function (id) {
   var db = this;
   var docs = {},
     deletions = {};
-  return db.allDocs({include_docs: true}).then(function (doc) {
+  var options = { include_docs: true, startkey : id + ".2018", endkey : id + ".9999" };
+                 
+  return db.allDocs(options).then(function (doc) {
     doc.rows.forEach(function (el) {
       if (!el.doc.$id) { // first delta for doc?
         el.doc.$id = el.doc._id;
