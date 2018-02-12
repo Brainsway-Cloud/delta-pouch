@@ -71,9 +71,10 @@ function save(db, doc) {
       }
     });
   } else { // new
+    doc.$id  = doc._id
+    doc._id += '.' + doc.$createdAt;
     return db.post(doc).then(function (response) {
-      response.$id = response.id;
-      onCreate(db, { id: response.id });
+      onCreate(db, { id: response.$id });
       return response;
     });
   }
@@ -91,7 +92,7 @@ exports.delete = function (docOrId) {
   return save(this, {$id: id, $deleted: true});
 };
 
-exports.all = function (id) {
+exports.__all = function (id) {
   var db = this;
   var docs = {},
     deletions = {};
