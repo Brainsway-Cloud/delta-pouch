@@ -92,6 +92,22 @@ exports.delete = function (docOrId) {
   return save(this, {$id: id, $deleted: true});
 };
 
+  "_conflicts": ["2-y"]
+
+function deleteConflicts(db, id) {
+  db.get(id, {conflicts: true}).then(function (doc) {
+    // do something with the doc
+    if (doc._conflicts) {
+      doc._conflicts.forEach(function (el) {
+        delete(el);
+      });
+    }
+  }).catch(function (err) {
+    // handle any errors
+  });
+}
+
+// rebuild the document from the delta changes in order of time
 exports.rebuildDoc = function (id) {
   var db = this;
   var outDoc = {},
