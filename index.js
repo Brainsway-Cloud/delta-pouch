@@ -92,12 +92,27 @@ exports.delete = function (docOrId) {
   return save(this, {$id: id, $deleted: true});
 };
 
-function deleteConflicts(db, id) {
+function deleteConflicts2(db, doc) {
+  return db
+    .get(doc._id, {
+      open_revs: doc._conflicts
+    })
+    .then(function(docs) {
+      docs.rows.forEach(function (el) { 
+        el._deleted = true;
+      });
+      return docs;
+    });
+    .then(function(docs) {
+      db.bulkDocs(docs);
+    };   
+  }
+    
+function deleteConflicts(db, id) { 
   db.get(id, {conflicts: true}).then(function (doc) {
     // do something with the doc
     if (doc._conflicts) {
-      doc._conflicts.forEach(function (el) {
-        delete(el);
+        deleteConflicts2(db, doc);
       });
     }
   }).catch(function (err) {
