@@ -92,11 +92,37 @@ exports.delete = function (docOrId) {
   return save(this, {$id: id, $deleted: true});
 };
 
-exports.__all = function (id) {
+exports.rebuildDoc = function (id) {
+  var db = this;
+  var outDoc = {},
+    deletions = {};
+  var options = { include_docs: true, startkey : id + ".2018", endkey : id + ".9999" };
+                 
+  return db.allDocs(options).then(function (doc) {
+    doc.rows.forEach(function (el) { // itterate the documents
+      if (!el.doc.$id) { 
+        console.log("Missing $id attribute?");
+        assert(false);
+      }
+      if (el.doc.$deleted) { 
+        outDoc = null;
+      } else {
+        if (outDoc) { // exists?
+          outDoc = exports.merge(outDoc, el.doc);
+        } else {
+          outDoc = el.doc;
+        }
+      }
+    });
+    return outDoc;
+  });
+};
+
+exports.__all = function () {
   var db = this;
   var docs = {},
     deletions = {};
-  var options = { include_docs: true, startkey : id + ".2018", endkey : id + ".9999" };
+  var options = { include_docs: true };
                  
   return db.allDocs(options).then(function (doc) {
     doc.rows.forEach(function (el) {
