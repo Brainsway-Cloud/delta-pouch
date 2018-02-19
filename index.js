@@ -92,8 +92,6 @@ exports.delete = function (docOrId) {
   return save(this, {$id: id, $deleted: true});
 };
 
-  "_conflicts": ["2-y"]
-
 function deleteConflicts(db, id) {
   db.get(id, {conflicts: true}).then(function (doc) {
     // do something with the doc
