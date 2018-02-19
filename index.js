@@ -261,6 +261,32 @@ exports.cleanup = function () {
   });
 };
 
+function onChange(doc) { 
+  if (!doc._conflicts) return;
+    collectConflicts(doc._conflicts, function(docs) {
+      var master = docs.sort(byTime).unshift();
+      for (var doc in docs) {
+        for (var prop in doc) {
+          if (!(prop in master)) { 
+            master[prop] = doc[prop];
+          } 
+        }
+      }
+      db.put(master, function(err) {
+        if (!err) { 
+          for (var doc in docs) {
+            db.remove(doc);
+          }
+        }
+      });     
+    });
+  }
+}
+
+exports.monitorAndResolveConflicts = function () {
+  this.changes({conflicts: true, onChange: onChange});
+}
+
 /* istanbul ignore next */
 if (typeof window !== 'undefined' && window.PouchDB) {
   window.PouchDB.plugin(exports);
